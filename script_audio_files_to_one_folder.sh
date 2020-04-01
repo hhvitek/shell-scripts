@@ -5,8 +5,8 @@
 # 3] Move file into $OUTPUT_FOLDER folder. If a targeted folder does not exist,
 #    it is auto-created using mkdir command
 
-INPUT_FOLDER="./TEST"
-OUTPUT_FOLDER="./TEST/Allie-OUTPUT"
+INPUT_FOLDER="./Allie"
+OUTPUT_FOLDER="./Allie-OUTPUT"
 
 AUDIO_FILE_EXTENSIONS='mp3,m4a,mpa,ogg, wma,aac,    wav,flac,aiff,alac'
 
@@ -19,8 +19,7 @@ AUDIO_FILE_EXTENSIONS='mp3,m4a,mpa,ogg, wma,aac,    wav,flac,aiff,alac'
 #        of these and some combinations using '[' (see next paragraphs), all
 #        other special characters, including '\', lose their special
 #        significance within a bracket expression.
-AUDIO_FILE_SAFE_CHARACTERS_REGEX='][()_.[:blank:][:alnum:]-'
-
+AUDIO_FILE_SAFE_CHARACTERS_REGEX='][()_[:blank:][:alnum:]-'
 
 ##################################################
 # Trims input string...
