@@ -129,7 +129,7 @@ function process_filename {
     )
 
     filename=$(
-        trim "$filename" | sed 's/[[:space:]]/_/g'
+        trim "$filename" | sed 's/[[:space:]]/_/g' | tr -s '_' | sed 's/^_+//g'
     )
 
 #   filename="$( sed "s/[^${AUDIO_FILE_SAFE_CHARACTERS_REGEX}]/ /g" <<< "$filename")"
