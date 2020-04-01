@@ -5,8 +5,8 @@
 # 3] Move file into $OUTPUT_FOLDER folder. If a targeted folder does not exist,
 #    it is auto-created using mkdir command
 
-INPUT_FOLDER="./Allie"
-OUTPUT_FOLDER="./Allie-OUTPUT"
+INPUT_FOLDER="./TEST"
+OUTPUT_FOLDER="./TEST/Allie-OUTPUT"
 
 AUDIO_FILE_EXTENSIONS='mp3,m4a,mpa,ogg, wma,aac,    wav,flac,aiff,alac'
 
@@ -38,7 +38,8 @@ function trim {
     fi
 
     local input="$1"
-    input=$( sed -r 's/^ *| *$//g' <<< "$input")
+    # -r extended regex ... (+)
+    input=$( sed -r 's/^ +| +$//g' <<< "$input")
 
     echo "$input"
 
@@ -129,7 +130,7 @@ function process_filename {
     )
 
     filename=$(
-        trim "$filename" | sed 's/[[:space:]]/_/g' | tr -s '_' | sed 's/^_+//g'
+        trim "$filename" | sed 's/[[:space:]]/_/g' | tr -s '_' | sed 's/^_//'
     )
 
 #   filename="$( sed "s/[^${AUDIO_FILE_SAFE_CHARACTERS_REGEX}]/ /g" <<< "$filename")"
