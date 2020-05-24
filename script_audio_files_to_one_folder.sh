@@ -1,14 +1,16 @@
 #!/bin/bash
 
-# 1] Process $INPUT_FOLDER folder structure and look for any audio files (mp3, m4a, ...)
-# 2] Rename file - removes unwanted characters
-# 3] Move file into $OUTPUT_FOLDER folder. If a targeted folder does not exist,
+# 1] Process $INPUT_FOLDER folder structure (recursively) and
+#    search for any files with relevant suffix specified in $FILE_SUFFIXES
+# 2] Rename all files - remove unwanted characters - determined by bash-like regular expresion
+#    $FILENAME_SAFE_CHARACTERS_REGEX
+# 3] Move files into $OUTPUT_FOLDER folder. If the target folder does not exist,
 #    it is auto-created using mkdir command
 
-INPUT_FOLDER="./Allie"
-OUTPUT_FOLDER="./Allie-OUTPUT"
-
-AUDIO_FILE_EXTENSIONS='mp3,m4a,mpa,ogg, wma,aac,    wav,flac,aiff,alac'
+# defaults to script's directory
+INPUT_FOLDER="$( dirname "$( readlink -f "$0" )" )"
+OUTPUT_FOLDER="${INPUT_FOLDER}/OUTPUT"
+FILE_SUFFIXES='mp3,m4a,mpa,ogg, wma,aac,    wav,flac,aiff,alac'
 
 # man(7)
 # To include a literal ']' in the list, make it the first character
@@ -19,10 +21,10 @@ AUDIO_FILE_EXTENSIONS='mp3,m4a,mpa,ogg, wma,aac,    wav,flac,aiff,alac'
 #        of these and some combinations using '[' (see next paragraphs), all
 #        other special characters, including '\', lose their special
 #        significance within a bracket expression.
-AUDIO_FILE_SAFE_CHARACTERS_REGEX='][()_[:blank:][:alnum:]-'
+FILENAME_SAFE_CHARACTERS_REGEX='][()_[:blank:][:alnum:]-'
 
 ##################################################
-# Trims input string...
+# Trim input string...
 # Arguments:
 #   $1 input string
 # Returns:
@@ -90,7 +92,7 @@ function contains {
     local suffixes="$1"
     local element="$2"
 
-    suffixes_arr=( $( get_array_from_string "$suffixes" ",") )
+    local suffixes_arr=( $( get_array_from_string "$suffixes" ",") )
 
     for suffix in "${suffixes_arr[@]}"; do
         # trim -r for "|"
@@ -124,7 +126,7 @@ function process_filename {
 
     filename=$(
         echo "$filename" |
-        sed "s/[^${AUDIO_FILE_SAFE_CHARACTERS_REGEX}]/ /g" |
+        sed "s/[^${FILENAME_SAFE_CHARACTERS_REGEX}]/ /g" |
         tr -s '[[:space:]]'
     )
 
@@ -153,16 +155,16 @@ function process_file {
 
     local filename="$1"
 
-    basename="$(basename -- "$filename")"
+    local basename="$(basename -- "$filename")"
 
-    name="${basename%.*}"
-    extension="${basename##*.}"
+    local name="${basename%.*}"
+    local suffix="${basename##*.}"
 
-    new_name="$( process_filename "$name")"
+    local new_name="$( process_filename "$name")"
 
     mkdir -p -- "$OUTPUT_FOLDER"
 
-    new_filename="${OUTPUT_FOLDER}/${new_name}.${extension}"
+    local new_filename="${OUTPUT_FOLDER}/${new_name}.${suffix}"
     cp -- "$filename" "$new_filename"
 
     echo "Processed: ${new_filename:0:80}..."
@@ -171,8 +173,8 @@ function process_file {
 ###################################################################
 # Executes program 1st attempt
 # For-loop using bash filename-expansion(*)
-# Issue here is not recursive
-#   * shopt -s globstar maks "**" recursive search
+# Issue here it is not recursive
+#   * shopt -s globstar makes "**" recursive search
 
 
 #real    3m58.760s
@@ -187,9 +189,9 @@ function run_standard {
             continue # file exists or ignore
         fi
 
-        file_extension="${filename##*.}"
+        file_suffix="${filename##*.}"
 
-        if contains "$AUDIO_FILE_EXTENSIONS" "$file_extension"; then
+        if contains "$FILE_SUFFIXES" "$file_suffix"; then
             process_file "$filename"
         fi
     done
@@ -206,14 +208,14 @@ function run_standard {
 #sys     1m1.740s
 ###################################################################
 function run_using_find {
-    extensions_arr=( $( get_array_from_string "$AUDIO_FILE_EXTENSIONS" ",") )
+    suffixes_arr=( $( get_array_from_string "$FILE_SUFFIXES" ",") )
 
-    for extension in "${extensions_arr[@]}"; do
+    for suffix in "${suffixes_arr[@]}"; do
 
         # -r prevents interpretation of \ escapes
         # -d NULL instead of newline
         # -print0 NULL instead of newline
-        find "$INPUT_FOLDER" -type f -name "*.$extension" -print0 |
+        find "$INPUT_FOLDER" -type f -name "*.$suffix" -print0 |
             while IFS= read -r -d '' filename; do
                 if [ ! -f "$filename" ]; then
                     continue # file exists or ignore
