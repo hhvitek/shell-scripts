@@ -9,7 +9,7 @@
 
 MOD_FOLDER="mod"
 
-FILES="$MOD_FOLDER/*/descriptor.mod"
+FILES="$MOD_FOLDER/*/*.mod"
 
 for mod_descriptor_filename in $FILES; do
     if [ ! -e "$mod_descriptor_filename" ]; then
@@ -43,20 +43,24 @@ for mod_descriptor_filename in $FILES; do
     
     echo "$parent_folder_name"
     echo "$parent_folder_absolute_path"
-    
+
+   
     windows_drive_letter=$( echo "$parent_folder_absolute_path" | cut -c2  )
     
     windows_parent_folder_absolute_path=$( echo "$parent_folder_absolute_path" | sed "s/^../${windows_drive_letter}:/"  )
     
-    echo "$parent_folder_name"
+    echo "$windows_drive_letter"
     echo "$windows_parent_folder_absolute_path"
     
+    # sed -i in place instead of stdout
+    # flag //d delete
     # 1
     sed -i '/^path="/d' "$mod_descriptor_filename"
     
     # 2
     sed -i '/^archive="/d' "$mod_descriptor_filename"
     
+    # echo -e interpret backslash escapes (\n)
     # 3
     echo -e "\npath=\"$windows_parent_folder_absolute_path\"" >> "$mod_descriptor_filename"
     
@@ -65,6 +69,8 @@ for mod_descriptor_filename in $FILES; do
     
     # 5
     cp -- "$mod_descriptor_filename" "${MOD_FOLDER}/${parent_folder_name}.mod"
+
+    echo "File: ${mod_descriptor_filename} processed"
     
 done
 
